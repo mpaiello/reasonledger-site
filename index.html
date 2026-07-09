@@ -1,1 +1,238 @@
-<!DOCTYPE html><html><head><title>Reasonledger</title></head><body><h1>Reasonledger</h1><p>An open specification for auditing reasoning transfer in multi-agent LLM systems.</p></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reasonledger &#8212; an open specification for auditing multi-agent LLM reasoning</title>
+<meta name="description" content="Reasonledger is an open specification and reference checker for auditing reasoning transfer between agents in multi-agent LLM systems: provenance, a three-way epistemic status, and per-step verification.">
+<link rel="canonical" href="https://reasonledger.org/">
+
+<!-- Open Graph / social -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://reasonledger.org/">
+<meta property="og:title" content="Reasonledger &#8212; auditing multi-agent LLM reasoning">
+<meta property="og:description" content="An open specification and reference checker for auditing reasoning transfer in multi-agent LLM systems. Author-run results; independent replication invited.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Reasonledger &#8212; auditing multi-agent LLM reasoning">
+<meta name="twitter:description" content="An open specification and reference checker for auditing reasoning transfer in multi-agent LLM systems.">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Reasonledger: an open specification for auditing multi-agent LLM reasoning",
+  "author": { "@type": "Person", "name": "Michael Patrick Aiello" },
+  "datePublished": "2026",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "sameAs": [
+    "https://github.com/mpaiello/reasonledger",
+    "https://doi.org/10.5281/zenodo.21277654"
+  ]
+}
+</script>
+
+<style>
+  :root {
+    --ink: #14181d;
+    --paper: #fbfbf9;
+    --muted: #5c6570;
+    --rule: #dcddd6;
+    --link: #1f3a5f;
+    --confirmed: #2f7a4d;
+    --open: #b07d2b;
+    --denied: #9c3535;
+    --code-bg: #f2f2ee;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Charter", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    line-height: 1.55;
+    font-size: 18px;
+  }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 0 1.5rem; }
+  code, pre, .mono {
+    font-family: "SF Mono", "JetBrains Mono", "Fira Mono", ui-monospace, "Menlo", "Consolas", monospace;
+  }
+
+  header { border-bottom: 1px solid var(--rule); }
+  header .wrap { padding-top: 4.5rem; padding-bottom: 3rem; }
+  .eyebrow {
+    font-family: "SF Mono", ui-monospace, monospace;
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 1.1rem;
+  }
+  h1 {
+    font-size: 2.6rem; line-height: 1.08; margin: 0 0 1rem; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .lede { font-size: 1.2rem; color: var(--ink); margin: 0 0 1.8rem; max-width: 34rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.6rem 0.9rem; align-items: baseline; }
+  .actions a {
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 0.85rem;
+    text-decoration: none; color: var(--link);
+    border: 1px solid var(--rule); border-radius: 2px;
+    padding: 0.5rem 0.9rem; background: #fff;
+  }
+  .actions a:hover { border-color: var(--link); }
+  .actions a.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .actions a.primary:hover { opacity: 0.88; }
+
+  section { border-bottom: 1px solid var(--rule); }
+  section .wrap { padding: 2.6rem 1.5rem; }
+  h2 {
+    font-family: "SF Mono", ui-monospace, monospace;
+    font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted); font-weight: 500; margin: 0 0 1.1rem;
+  }
+  p { margin: 0 0 1rem; }
+  p.tight { max-width: 38rem; }
+  a { color: var(--link); }
+
+  /* signature: the three-way epistemic status triad */
+  .triad { display: flex; flex-wrap: wrap; gap: 0.9rem; margin: 1.4rem 0 0.4rem; }
+  .status {
+    flex: 1 1 8rem; border: 1px solid var(--rule); border-top-width: 3px; padding: 0.8rem 0.9rem;
+    background: #fff;
+  }
+  .status .k {
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 0.85rem; font-weight: 600;
+    display: block; margin-bottom: 0.15rem;
+  }
+  .status .d { font-size: 0.92rem; color: var(--muted); }
+  .status.confirmed { border-top-color: var(--confirmed); }
+  .status.confirmed .k { color: var(--confirmed); }
+  .status.open { border-top-color: var(--open); }
+  .status.open .k { color: var(--open); }
+  .status.denied { border-top-color: var(--denied); }
+  .status.denied .k { color: var(--denied); }
+
+  pre {
+    background: var(--code-bg); border: 1px solid var(--rule); border-radius: 2px;
+    padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.86rem; line-height: 1.5;
+    margin: 0.4rem 0 0.2rem;
+  }
+  pre .cf { color: var(--confirmed); }
+  pre .op { color: var(--open); }
+  pre .dn { color: var(--denied); }
+  pre .bl { color: var(--link); }
+  .caption { font-size: 0.9rem; color: var(--muted); margin-top: 0.7rem; }
+
+  .finding {
+    font-size: 1.25rem; line-height: 1.4; max-width: 36rem; margin: 0.3rem 0 0.6rem;
+  }
+  .finding .swing { font-family: "SF Mono", ui-monospace, monospace; white-space: nowrap; }
+
+  ul.links { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+  ul.links li { padding: 0.55rem 0; border-bottom: 1px solid var(--rule); }
+  ul.links li:last-child { border-bottom: none; }
+  ul.links .lab {
+    font-family: "SF Mono", ui-monospace, monospace; font-size: 0.78rem;
+    letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase;
+    display: inline-block; min-width: 8.5rem;
+  }
+
+  footer .wrap { padding: 2.4rem 1.5rem 4rem; }
+  footer p { font-size: 0.9rem; color: var(--muted); max-width: 40rem; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 34rem) {
+    header .wrap { padding-top: 3rem; }
+    h1 { font-size: 2rem; }
+    .lede { font-size: 1.08rem; }
+    ul.links .lab { display: block; min-width: 0; margin-bottom: 0.1rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .actions a, .status { transition: border-color 0.15s ease, opacity 0.15s ease; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Open specification &middot; multi-agent LLM systems</p>
+    <h1>Reasonledger</h1>
+    <p class="lede">A notation for transferring reasoning between AI systems that leaves an auditable record of the transfer.</p>
+    <div class="actions">
+      <a class="primary" href="https://doi.org/10.5281/zenodo.21277654">Read the paper</a>
+      <a href="https://github.com/mpaiello/reasonledger">Repository</a>
+      <a href="https://github.com/mpaiello/reasonledger/blob/master/SPEC.md">Specification</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>What it is</h2>
+    <p class="tight">Multi-agent systems are easy to run and hard to inspect. When a planner hands work to an executor, and that output feeds a third agent, the reasoning behind the final answer is scattered across opaque messages. Plain prose loses structure at each hop; plain JSON carries data but no record of what was checked versus assumed.</p>
+    <p class="tight">Reasonledger encodes model-to-model messages as named blocks, each carrying an explicit instruction for how the receiver should process the enclosed content. Across a chain of agents, those blocks and a three-way epistemic status accumulate into an inspectable record of what each model claimed, what it verified, and what it accepted on trust. That record is the ledger.</p>
+    <p class="tight">It is a payload format. It rides inside a transport such as MCP or A2A; it does not replace one. It is <strong>not</strong> a blockchain and involves no tokens, chain, or consensus &mdash; &ldquo;ledger&rdquo; refers to the audit trail the format produces, nothing more.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Epistemic status, preserved across hops</h2>
+    <p class="tight">Every claim carries one of three states, kept distinct across model boundaries rather than collapsed into a single answer.</p>
+    <div class="triad">
+      <div class="status confirmed"><span class="k">confirmed</span><span class="d">verified at this step</span></div>
+      <div class="status open"><span class="k">open</span><span class="d">asserted, not yet checked</span></div>
+      <div class="status denied"><span class="k">denied</span><span class="d">ruled out</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>A small example</h2>
+    <pre>@FORMAL [kepler_third]
+T&sup2; = (4&pi;&sup2; / GM) &middot; a&sup3;
+
+@DERIVE [circular_velocity]
+(1) For a circular orbit, gravity supplies the centripetal force
+(2) G&middot;M&middot;m / r&sup2; = m&middot;v&sup2; / r
+(3) From (2): v&sup2; = G&middot;M / r
+&rarr;&rarr; v = sqrt(G&middot;M / r)
+
+@TAXONOMY [orbit_properties]
+bound_orbit: <span class="cf">confirmed</span>
+exact_eccentricity: <span class="op">open</span>
+parabolic_escape: <span class="dn">denied</span></pre>
+    <p class="caption">After a transfer hop, the receiver's record carries the audit trail: which agent asserted what, which steps were verified, which were trusted, and where a claim's status changed along the way.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>From the paper</h2>
+    <p class="finding">An LLM auditor's false-positive rate on identical clean reasoning traces moves from <span class="swing">60/60 to 0/60</span> on prompt wording alone.</p>
+    <p class="tight">Under a decision rule fixed before data collection, the notation gives no failure-detection advantage over information-matched JSON; its value is standardization. The stronger, separate finding is the prompt sensitivity above, reproduced on held-out traces under a design anchored before any live auditor call. These are author-run results; independent replication is invited and has not yet been performed. Reasonledger makes no claim about model cognition.</p>
+    <p class="tight"><a href="https://doi.org/10.5281/zenodo.21277654">When the Auditor Cries Wolf: Prompt-Dependent False Positives in LLM Reasoning Auditors</a> &mdash; specification, reference checker, evaluation harness, study protocols, and raw results are released.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Resources</h2>
+    <ul class="links">
+      <li><span class="lab">Paper</span><a href="https://doi.org/10.5281/zenodo.21277654">Zenodo &middot; 10.5281/zenodo.21277654</a></li>
+      <li><span class="lab">Repository</span><a href="https://github.com/mpaiello/reasonledger">github.com/mpaiello/reasonledger</a></li>
+      <li><span class="lab">Specification</span><a href="https://github.com/mpaiello/reasonledger/blob/master/SPEC.md">SPEC.md</a></li>
+      <li><span class="lab">Reference checker</span><a href="https://github.com/mpaiello/reasonledger/tree/master/reference">reference/validator.py</a></li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Reasonledger is an open, royalty-free standard, freely implementable by anyone, including in commercial products. Specification and documentation are licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC&nbsp;BY&nbsp;4.0</a>; the reference code under <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache&nbsp;2.0</a>. Developed and first disclosed as AI-Native Notation (ANN).</p>
+  </div>
+</footer>
+
+</body>
+</html>
